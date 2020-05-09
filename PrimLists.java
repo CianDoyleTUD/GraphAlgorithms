@@ -2,6 +2,7 @@
 // Uses an Adjacency Linked Lists, suitable for sparse graphs
 
 import java.io.*;
+import java.util.ArrayList;
 
 class Heap
 {
@@ -84,6 +85,12 @@ class Graph {
         public int wgt;
         public Node next;
     }
+
+    class Edge {
+        public int vert1;
+        public int vert2;
+        public int weight;
+    }
     
     // V = number of vertices
     // E = number of edges
@@ -93,9 +100,11 @@ class Graph {
     private int[][] adjMatrix;
     private Node z;
     private Node tempNode;
-    private int[] mst;
+    private ArrayList<Edge> mst = new ArrayList<Edge>();;
+    private int viableNode;
     
     // used for traversing graph
+    private ArrayList<Integer> toVisit = new ArrayList<Integer>();
     private int[] visited;
     private int id;
     
@@ -129,8 +138,7 @@ class Graph {
         for(v = 1; v <= V; ++v)
             adj[v] = z;               
         
-       // read the edges
-        System.out.println("Reading edges from text file:");
+        // read the edges
         for(e = 1; e <= E; ++e)
         {
             line = reader.readLine();
@@ -138,14 +146,12 @@ class Graph {
             u = Integer.parseInt(parts[0]);
             v = Integer.parseInt(parts[1]); 
             wgt = Integer.parseInt(parts[2]);
-            
-            System.out.println("Edge " + toChar(u) + "--(" + wgt + ")--" + toChar(v));    
-            
-            // write linked list code to put edge into adjacency matrix
+
             // Putting edges into adjacency matrix;
             adjMatrix[u][v] = wgt;
             adjMatrix[v][u] = wgt;
 
+            //Putting both occurences of the edge into adjacency list
             tempNode = new Node();
             tempNode.vert = u;
             tempNode.next = adj[v];
@@ -184,8 +190,10 @@ class Graph {
 
         System.out.println("");
         
-        for(int i = 1; i <= V; i++){
-            for(int j = 1; j <= V; j++){
+        for(int i = 1; i <= V; i++)
+        {
+            for(int j = 1; j <= V; j++)
+            {
                 if (j == 1)
                     System.out.print(toChar(i) + "| ");
                 if(adjMatrix[i][j] == 0) // Looks better than printing null
@@ -196,46 +204,93 @@ class Graph {
             System.out.println("");
         }
 
-        for(v=1; v<=V; ++v){
-            System.out.print("\nadj[" + toChar(v) + "] ->" );
+        for(v=1; v<=V; ++v)
+        {
+            System.out.print("\nAdjacency list for [" + toChar(v) + "] ->" );
             for(n = adj[v]; n != z; n = n.next) 
-                //System.out.print(" |" + toChar(n.vert) + " | " + n.wgt + "| ->"); 
-                System.out.print(" (" + toChar(n.vert) + ") ->");    
+                System.out.print(" (" + toChar(n.vert) + " | " + n.wgt + ") ->");    
         }
         System.out.println("");
     }
 
-
-    
-	/*public void MST_Prim(int s)
+	public void MST_Prim(int s)
 	{
-        int v, u;
-        int wgt, wgt_sum = 0;
-        int[]  dist, parent, hPos;
-        Node t;
+        
+        visited = new int[V+1];
 
-        //code here
+        for(int v = 1; v <= V; v++)
+            toVisit.add(v);
+
         
-        dist[s] = 0;
-        
-        Heap h =  new Heap(V, dist, hPos);
-        h.insert(s);
-        
-        while (false)  
+        visited[s] = 1; // Adding our starting point into list of visted nodes.
+
+        toVisit.remove(Integer.valueOf(s)); // No longer consider this node since it's in our tree
+
+        for(int i = 0; i < toVisit.size(); i++) {   
+            System.out.print(toVisit.get(i));
+        }  
+
+        System.out.println("Prim's algorithm");
+        System.out.println("Starting at vertex " + toChar(s));
+
+        // Keep building MST until all nodes are visited
+        while(!toVisit.isEmpty()) 
         {
-            // most of alg here
-            
+            checkEdges();
         }
-        System.out.print("\n\nWeight of MST = " + wgt_sum + "\n");
         
-        mst = parent;                      		
-	}*/
+        showMST();
+
+    }
+    
+    public void checkEdges() 
+    {
+
+        viableNode = 0;
+        int weight = 99;
+        Node n;
+        Edge e;
+
+        for(int v = 1; v <= V; v++)
+        {
+            if(visited[v] == 1)// If visited, consider the edges from node
+            { 
+                System.out.print("\nPossible connections for [" + toChar(v) + "] -> ");
+                for(n = adj[v]; n != z; n = n.next) 
+                {
+                    if(toVisit.contains(n.vert)) // Check all remaining nodes in graph which are unvisited
+                    {
+                        System.out.print("(Node " + toChar(n.vert) + " | Weight: " + n.wgt + ") - ");
+                        if(n.wgt < weight) // Finding connection with least weight
+                        {   
+                            weight = n.wgt;
+                            viableNode = n.vert;
+                        }
+                    }
+                }
+            }
+        }
+
+        e = new Edge();
+
+        e.vert2 = viableNode;
+        System.out.println("\nAdding node " + toChar(viableNode) + " to minimum spanning tree");
+
+        // Mark the closest node as part of the tree
+        visited[viableNode] = 1; 
+        toVisit.remove(Integer.valueOf(viableNode));
+        mst.add(e);
+
+    }
     
     public void showMST()
     {
         System.out.print("\n\nMinimum Spanning tree parent array is:\n");
-        for(int v = 1; v <= V; ++v)
-            System.out.println(toChar(v) + " -> " + toChar(mst[v]));
+
+        for(int i = 0; i < mst.size(); i++) {   
+            System.out.print("[" + toChar(mst.get(i)) + "] -> ");
+        }  
+
         System.out.println("");
     }
 
@@ -244,15 +299,15 @@ class Graph {
 public class PrimLists {
     public static void main(String[] args) throws IOException
     {
-        int s = 2;
-        String fname = "sGraph.txt";               
+        int s = 4;
+        String fname = "myGraph.txt";               
 
         Graph g = new Graph(fname);
        
-        g.display();
+        //g.display();
 
        //g.DF(s);
        //g.DF_iteration(s);
-       //g.MST_Prim(s);                  
+       g.MST_Prim(s);                  
     }
 }
