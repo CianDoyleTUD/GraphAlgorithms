@@ -101,6 +101,7 @@ class Graph {
     private Node z;
     private Node tempNode;
     private ArrayList<Edge> mst = new ArrayList<Edge>();;
+    private int mstWeight;
     private int viableNode;
     
     // used for traversing graph
@@ -217,6 +218,7 @@ class Graph {
 	{
         
         visited = new int[V+1];
+        mstWeight = 0;
 
         for(int v = 1; v <= V; v++)
             toVisit.add(v);
@@ -225,10 +227,6 @@ class Graph {
         visited[s] = 1; // Adding our starting point into list of visted nodes.
 
         toVisit.remove(Integer.valueOf(s)); // No longer consider this node since it's in our tree
-
-        for(int i = 0; i < toVisit.size(); i++) {   
-            System.out.print(toVisit.get(i));
-        }  
 
         System.out.println("Prim's algorithm");
         System.out.println("Starting at vertex " + toChar(s));
@@ -250,12 +248,13 @@ class Graph {
         int weight = 99;
         Node n;
         Edge e;
+        e = new Edge();
 
         for(int v = 1; v <= V; v++)
         {
             if(visited[v] == 1)// If visited, consider the edges from node
             { 
-                System.out.print("\nPossible connections for [" + toChar(v) + "] -> ");
+                System.out.print("\nPossible connections from [" + toChar(v) + "] -> ");
                 for(n = adj[v]; n != z; n = n.next) 
                 {
                     if(toVisit.contains(n.vert)) // Check all remaining nodes in graph which are unvisited
@@ -265,16 +264,20 @@ class Graph {
                         {   
                             weight = n.wgt;
                             viableNode = n.vert;
+                            e.vert1 = v;
                         }
                     }
                 }
             }
         }
 
-        e = new Edge();
+        mstWeight += weight;
 
         e.vert2 = viableNode;
+        e.weight = weight;
+
         System.out.println("\nAdding node " + toChar(viableNode) + " to minimum spanning tree");
+        System.out.println(mstWeight);
 
         // Mark the closest node as part of the tree
         visited[viableNode] = 1; 
@@ -285,13 +288,13 @@ class Graph {
     
     public void showMST()
     {
-        System.out.print("\n\nMinimum Spanning tree parent array is:\n");
+        System.out.print("\n\nMinimum Spanning edges, in order:\n");
 
         for(int i = 0; i < mst.size(); i++) {   
-            System.out.print("[" + toChar(mst.get(i)) + "] -> ");
+            System.out.print("{" + toChar(mst.get(i).vert1) + " -> " + toChar(mst.get(i).vert2) + "} Weight: " + mst.get(i).weight + "\n");
         }  
 
-        System.out.println("");
+        System.out.println("Total MST weight: " + mstWeight);
     }
 
 }
