@@ -4,6 +4,7 @@
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Stack; 
+import java.util.Scanner;
 
 class Graph {
     class Node {
@@ -11,32 +12,26 @@ class Graph {
         public int wgt;
         public Node next;
     }
-    // Edge class used for minimum spanning tree
-    class Edge {
+   
+    class Edge {  // Edge class used for minimum spanning tree, purely for display purposes
         public int vert1;
         public int vert2;
         public int weight;
     }
     
-    // V = number of vertices
-    // E = number of edges
-    // adj[] is the adjacency lists array
-    private int V, E;
+    private Node z; // sentinel node to mark end of adjacency list
+    private Node tempNode; 
     private Node[] adj;
-    private int[][] adjMatrix;
-    private Node z;
-    private Node tempNode;
-    private ArrayList<Edge> mst = new ArrayList<Edge>();;
+
+    private int V, E; // total number of vertices and edges in graph
     private int mstWeight;
     private int viableNode;
-    
-    // used for traversing graph
-    private ArrayList<Integer> toVisit = new ArrayList<Integer>();
     private int[] visited;
-
-    // used for iterative version of depth-first
-    private Stack<Integer> dfStack;
+    private int[][] adjMatrix;
     
+    private ArrayList<Edge> mst = new ArrayList<Edge>(); // minimum spanning tree, represented as set of edges for display purposes
+    private ArrayList<Integer> toVisit = new ArrayList<Integer>(); // keeping track of nodes needed to visit to build mst
+    private Stack<Integer> dfStack; // stack used for iterative version of depth-first
     
     // default constructor
     public Graph(String graphFile)  throws IOException
@@ -55,8 +50,8 @@ class Graph {
         
         V = Integer.parseInt(parts[0]);
         E = Integer.parseInt(parts[1]);
-        // Initialise adjacency matrix to appropriate size
-        adjMatrix = new int[V+1][V+1];
+        
+        adjMatrix = new int[V+1][V+1]; // Initialise adjacency matrix to appropriate size
 
         visited = new int[V+1];
 
@@ -82,7 +77,7 @@ class Graph {
             adjMatrix[u][v] = wgt;
             adjMatrix[v][u] = wgt;
 
-            //Putting both occurences of the edge into adjacency list
+            // Putting both occurences of the edge into adjacency lists
             tempNode = new Node();
             tempNode.vert = u;
             tempNode.next = adj[v];
@@ -106,16 +101,14 @@ class Graph {
     {  
         return (char)(u + 64);
     }
-    
+
     // method to display the graph representation
     public void display() 
     {
-
         int v;
         Node n;
 
         System.out.println("\nAdjacency matrix\n"); 
-
         System.out.print("   ");
 
         for(int i = 1; i <= V; i++){
@@ -123,9 +116,8 @@ class Graph {
         }
 
         System.out.println("");
-        
-        // Loop through adjacency matrix and print values
-        for(int i = 1; i <= V; i++)
+       
+        for(int i = 1; i <= V; i++) // Loop through adjacency matrix and print values
         {
             for(int j = 1; j <= V; j++)
             {
@@ -138,11 +130,10 @@ class Graph {
             }
             System.out.println("");
         }
-
-        // Print adjacency lists
-        for(v = 1; v <= V; ++v)
+        
+        for(v = 1; v <= V; ++v) // Print adjacency lists
         {
-            System.out.print("\nAdjacency list for [" + toChar(v) + "] ->" );
+            System.out.print("\nAdjacency list for node " + toChar(v) + " ->" );
 
             for(n = adj[v]; n != z; n = n.next) 
                 System.out.print(" (" + toChar(n.vert) + " | " + n.wgt + ") ->");    
@@ -152,9 +143,7 @@ class Graph {
 
 	public void MST_Prim(int s)
 	{
-        
-        //visited = new int[V+1];
-        mstWeight = 0;
+        mstWeight = 0; // Total weight is 0 initially since no nodes in tree
 
         for(int v = 1; v <= V; v++)
             toVisit.add(v);
@@ -173,14 +162,12 @@ class Graph {
         }
         
         showMST();
-
     }
     
     public void checkEdges() 
     {
-
         viableNode = 0;
-        int weight = 99;
+        int weight = 99; 
         Node n;
         Edge e;
         e = new Edge();
@@ -213,13 +200,12 @@ class Graph {
         e.vert2 = viableNode;
         e.weight = weight;
 
-        System.out.println("\nAdding node " + toChar(viableNode) + " to minimum spanning tree with weight " + weight + " from " + toChar(e.vert1));
+        System.out.println("\n\nAdding node " + toChar(viableNode) + " to minimum spanning tree with weight " + weight + " from " + toChar(e.vert1));
         System.out.println("Current spanning tree weight: " + mstWeight);
-
-        // Mark the closest node as part of the tree
+        
         visited[viableNode] = 1; 
         toVisit.remove(Integer.valueOf(viableNode));
-        mst.add(e);
+        mst.add(e); // Add closest node to tree
 
     }
     
@@ -236,17 +222,16 @@ class Graph {
 
     public void DF(int s) // Recursive version
     {
-
         Node n;
         n = adj[s]; 
 
         visited[s] = 1;
 
-        System.out.print("\n Current node [" + toChar(s) + "]\n Visited nodes:" );
+        System.out.print("\n Current node [" + toChar(s) + "]\n Visited nodes - " );
 
         for(int i = 1; i <= V; i++) 
         {
-            System.out.print("\n " + toChar(i) + ": " + visited[i]);
+            System.out.print(toChar(i) + ":" + visited[i] + ", ");
         }
         
         for(n = adj[s]; n != z; n = n.next){
@@ -255,11 +240,14 @@ class Graph {
                 DF(n.vert);    
 
         }
-           
     }
 
     public void DF_iteration(int s) // Iterative version
     {
+        for(int i = 1; i <= V; i++) // Initialise all nodes to unvisited, needed if running AFTER recursive version of function since they share the visited array
+        {
+            visited[i] = 0;
+        }
 
         dfStack = new Stack<Integer>(); // Create a new stack
         dfStack.push(s); // Push root node onto top of stack
@@ -274,41 +262,52 @@ class Graph {
 
             n = adj[top];
             
-            if(visited[top] == 0)
-                visited[top] = 1; // Mark node as visited
+            visited[top] = 1; // Mark node as visited
 
-            System.out.print("\n Current node on top of stack [" + toChar(top) + "]\n Visited nodes:" );
+            System.out.print("\nCurrent value on top of stack [" + toChar(top) + "]\nVisited nodes - ");
 
             for(int i = 1; i <= V; i++) 
             {
-                System.out.print("\n " + toChar(i) + ": " + visited[i]);
+                System.out.print(toChar(i) + ":" + visited[i] + ", ");
             }
             
             for(n = adj[top]; n != z; n = n.next){
-
                 if(visited[n.vert] == 0)
                     dfStack.push(n.vert); // Push node onto top of stack
-
             }
         }
-
-        System.out.print("\n Current node on top of stack [" + toChar(top) + "]\n Visited nodes:" );
+        System.out.print("\n\nStack is empty, all nodes visited\n");
     }
-
 }
 
 public class PrimLists {
     public static void main(String[] args) throws IOException
     {
         int s = 1;
-        String fname = "dfGraph.txt";               
-
+        String fname = "";     
+        String vertex = "";
+        Scanner in = new Scanner(System.in);   
+             
+        // Read user input
+        System.out.println("\nEnter the name of a txt file from which to load graph:");
+        fname = in.nextLine();
         Graph g = new Graph(fname);
-       
-        //g.display();
 
-        //g.DF(s);
+        System.out.println("Pick a starting vertex (enter either character or number):");
+        vertex = in.nextLine();
+
+        if(Character.isLetter(vertex.charAt(0)))
+            s = (int)vertex.charAt(0) - 96; // convert a to 1, b to 2 and so on using ascii table.
+        else
+            s = Integer.parseInt(vertex);
+
+        in.close(); 
+       
+        g.display();
+        System.out.println("\n---RECURSIVE DEPTH FIRST---");
+        g.DF(s);
+        System.out.println("\n\n---ITERATIVE DEPTH FIRST---");
         g.DF_iteration(s);
-        //g.MST_Prim(s);                  
+        g.MST_Prim(s);                  
     }
 }
